@@ -6,9 +6,11 @@
 #include <fun>
 #include <hamsandwich>
 
+// this url should point to a symbolic link to addons/amxmodx/data/playerskills.html that is available online
+//#define SKILLS_MOTD "<html><head><meta http-equiv='refresh' content='0;url=http://127.0.0.1/playerskills.html'></head><body></body></html>"
+// if you use CZ bots, read this forums.alliedmods.net/showthread.php?t=294861
+//#define BOTS_HAVE_SKILLS
 #define EXTRA_LIFE_GIVES_WEAPONS
-// #define SKILLS_MOTD
-// #define BOTS_HAVE_SKILLS
 new const Float:GRAVITY = 0.5
 new const Float:AMMO_TIME = 0.5
 new const AMMO_TO_ADD = 2
@@ -51,7 +53,7 @@ new const active1_count = 6
 enum (+= 1000) {
     EXTRA_LIFE_TASK = 1000, PRESS_E_TASK, END_E_TASK, RELEASE_E_TASK, INFO_TASK,
     CAST_F_TASK, HOOK_TASK, HARPOON_REELIN_TASK, HARPOON_ESCAPE_TASK,
-    DISORIENTED_TASK, VELOCITY_TASK, SLAY_STUCK_TASK, BOT_TASK
+    DISORIENTED_TASK, VELOCITY_TASK, SLAY_STUCK_TASK, BOT_TASK, MOTD_TASK
 }
 
 new bool:has_antigravity[33]
@@ -117,7 +119,9 @@ new bool:round_started
 new msg_sync, gren_tail, sprite_line, sprite_lightning
 //-----------------------------------------------------------------------------
 public plugin_init() {
-    register_plugin("Skills Mod", "0.1.13", "Various authors")
+    register_plugin("Skills Mod", "0.1.14", "Various authors")
+    // https://www.gametracker.com/search/?search_by=server_variable&search_by2=skillsmod_version
+    register_cvar("skillsmod_version", "0.1.14", FCVAR_SERVER|FCVAR_SPONLY)
     register_dictionary("skills_mod.txt")
     RegisterHam(Ham_CS_Player_ResetMaxSpeed, "player", "forward_maxspeed")
     RegisterHam(Ham_Killed, "player", "player_killed", 1)
@@ -203,36 +207,47 @@ public say_reset(id) {
 
 #if defined SKILLS_MOTD
 public say_skills(id) {
-    new string[2000] = "<html><head><meta charset='UTF-8'><style>body{background:#000;margin:8px;color: #FFB000;font: normal 16px/20px Verdana, Tahoma, sans-serif;}ct{color:#A4CBF2}t{color:#E04D4D}</style></head><body>"
-    static players[32], players_count, pid, player_name[32]
-    get_players(players, players_count, "e", "TERRORIST")
-    for (new i = 0; i < players_count; i++) {
-        pid = players[i]
-        get_user_name(pid, player_name, 32)
-        formatex(string, 2000, "%s<t>%s</t>: ", string, player_name)
-        for (new j = 0; j < skills_count[pid] - 1; j++)
-            formatex(string, 2000, "%s%L, ", string, id, names[skills_selected[pid][j]])
-        if (skills_count[pid] > 0)
-            formatex(string, 2000, "%s%L</br>", string, id, names[skills_selected[pid][skills_count[pid] - 1]])
-        else
-            formatex(string, 2000, "%s</br>", string)
+    if (!task_exists(MOTD_TASK)) {
+        new file = fopen("addons/amxmodx/data/playerskills.html", "w")
+        new string[500] = "<html><head><meta charset='UTF-8'><style>body{background:#000;margin:8px;color: #FFB000;font: normal 16px/20px Verdana, Tahoma, sans-serif;}.ct{color:#A4CBF2}.t{color:#E04D4D}</style></head><body>"
+        fputs(file, string)
+        static players[32], players_count, pid, player_name[32]
+        get_players(players, players_count, "e", "TERRORIST")
+        for (new i = 0; i < players_count; i++) {
+            pid = players[i]
+            get_user_name(pid, player_name, 32)
+            formatex(string, 500, "<span class=t>%s</span>: ", player_name)
+            for (new j = 0; j < skills_count[pid] - 1; j++)
+                formatex(string, 500, "%s%L, ", string, id, names[skills_selected[pid][j]])
+            if (skills_count[pid] > 0)
+                formatex(string, 500, "%s%L</br>", string, id, names[skills_selected[pid][skills_count[pid] - 1]])
+            else
+                formatex(string, 500, "%s</br>", string)
+            fputs(file, string)
+        }
+        get_players(players, players_count, "e", "CT")
+        for (new i = 0; i < players_count; i++) {
+            pid = players[i]
+            get_user_name(pid, player_name, 32)
+            formatex(string, 500, "<span class=ct>%s</span>: ", player_name)
+            for (new j = 0; j < skills_count[pid] - 1; j++)
+                formatex(string, 500, "%s%L, ", string, id, names[skills_selected[pid][j]])
+            if (skills_count[pid] > 0)
+                formatex(string, 500, "%s%L</br>", string, id, names[skills_selected[pid][skills_count[pid] - 1]])
+            else
+                formatex(string, 500, "%s</br>", string)
+            fputs(file, string)
+        }
+        fputs(file, "</body></html>")
+        fclose(file)
+        set_task(1.0, "skills_motd_task", MOTD_TASK)
     }
-    get_players(players, players_count, "e", "CT")
-    for (new i = 0; i < players_count; i++) {
-        pid = players[i]
-        get_user_name(pid, player_name, 32)
-        formatex(string, 2000, "%s<ct>%s</ct>: ", string, player_name)
-        for (new j = 0; j < skills_count[pid] - 1; j++)
-            formatex(string, 2000, "%s%L, ", string, id, names[skills_selected[pid][j]])
-        if (skills_count[pid] > 0)
-            formatex(string, 2000, "%s%L</br>", string, id, names[skills_selected[pid][skills_count[pid] - 1]])
-        else
-            formatex(string, 2000, "%s</br>", string)
-    }
-    formatex(string, 2000, "%s</body></html>", string)
-    show_motd(id, string)  // не помещается
+    show_motd(id, SKILLS_MOTD)
     return PLUGIN_HANDLED
 }
+
+public skills_motd_task()
+    return
 #endif
 //-----------------------------------------------------------------------------
 reset(id, menu = false) {
@@ -1633,7 +1648,11 @@ public skills_menu_handler(id, menu, item) {
         f_cooldown[id] = 0.0
         give_active2(id, item + passive_count + active1_count)
         client_print(id, print_chat, "%L", id, "SKILLS_ACTIVE2_TIP", name)
+        #if defined SKILLS_MOTD
+        client_print(id, print_chat, "%L", id, "SKILLS_RESET_SKILLS_TIP")
+        #else
         client_print(id, print_chat, "%L", id, "SKILLS_RESET_TIP")
+        #endif
     } else {
         if (item > 6)
             menu_page[id] = 1

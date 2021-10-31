@@ -33,6 +33,7 @@ SKILLS_PASSIVE_TIP = You chose %s
 SKILLS_ACTIVE1_TIP = You chose %s, press E to use it
 SKILLS_ACTIVE2_TIP = You chose %s, press F to use it
 SKILLS_RESET_TIP = Say /reset to reset the skills
+SKILLS_RESET_SKILLS_TIP = Say /reset to reset the skills, say /skills to see other players' skills
 SKILLS_RESET_MESSAGE = You'll get your skills reset after death or in the next round
 SKILLS_TOO_MANY_GRENADES = No more than %d of these grenades at the same time
 
@@ -71,5 +72,6 @@ SKILLS_PASSIVE_TIP = Вы выбрали %s
 SKILLS_ACTIVE1_TIP = Вы выбрали %s, нажмите E для использования
 SKILLS_ACTIVE2_TIP = Вы выбрали %s, нажмите F для использования
 SKILLS_RESET_TIP = Напишите /reset для сброса способностей
+SKILLS_RESET_SKILLS_TIP = /reset - сбросить свои способности, /skills - посмотреть способности игроков
 SKILLS_RESET_MESSAGE = Способности будут сброшены после смерти или в начале раунда
 SKILLS_TOO_MANY_GRENADES = Не более %d гранат этого вида одновременно
